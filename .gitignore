@@ -1,0 +1,5 @@
+/.caddy_config
+/.caddy_data
+/mysql
+/wordpress
+.history

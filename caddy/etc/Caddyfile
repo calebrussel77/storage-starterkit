@@ -1,0 +1,33 @@
+{
+    default_sni {$SERVER_NAME}
+}
+
+{$SERVER_NAME} {    
+    import /etc/{$TLS_MODE} 
+    root * /var/www/html
+    encode zstd gzip
+
+    @forbidden {
+        not path /wp-includes/ms-files.php
+        path /wp-admin/includes/*.php
+        path /wp-includes/*.php
+        path /wp-config.php
+        path /wp-content/uploads/*.php
+        path /.user.ini
+        path /wp-content/debug.log
+    }
+    respond @forbidden "Access denied" 403
+
+    php_fastcgi wordpress:9000
+    file_server
+
+    log {
+        output file /var/log/caddy.log
+    }
+
+    header / {
+      X-Frame-Options "SAMEORIGIN"
+      X-Content-Type-Options "nosniff"
+    }
+
+}
