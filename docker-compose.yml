@@ -30,7 +30,7 @@ services:
     env_file:
       - ./conf/pgadmin.env
     ports:
-      - "80:80"
+      - "8080:80"
     volumes:
       - pgadmin_data:/var/lib/pgadmin
     networks:

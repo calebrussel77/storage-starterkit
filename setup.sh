@@ -36,7 +36,7 @@ echo "Vérification de l'installation de Docker..."
 sudo docker run --rm hello-world
 
 # Installer Docker Compose Plugin
-echo "Installation de Docker Compose..."
+echo "Installation de Docker Compose Plugin..."
 sudo apt-get install docker-compose-plugin
 
 # Verifier l'installation
@@ -48,9 +48,8 @@ echo "Configuration du pare-feu..."
 sudo ufw allow OpenSSH
 sudo ufw allow 6379/tcp    # Redis
 sudo ufw allow 5432/tcp    # PostgreSQL
-sudo ufw allow 80/tcp      # HTTP
+sudo ufw allow 8080/tcp    # pgAdmin
 sudo ufw allow 9000/tcp    # Portainer
-sudo ufw allow 8000/tcp    # Portainer Agent
 sudo ufw allow 9090/tcp    # Prometheus
 sudo ufw allow 3000/tcp    # Grafana
 sudo ufw enable
@@ -76,18 +75,18 @@ echo "Planification des sauvegardes régulières..."
 # Installation de Portainer
 echo "Installation de Portainer..."
 docker volume create portainer_data
-docker run -d -p 9000:9000 -p 8000:8000 --name=portainer --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer-ce:2.20.3-alpine
+docker run -d -p 9000:9000 --name=portainer --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer-ce:2.20.3-alpine
 
+# Installation de Prometheus et Grafana pour la surveillance (optionnel)
+echo "Installation de Prometheus et Grafana..."
+docker network create monitoring
 
-# # Installation de Prometheus et Grafana pour la surveillance (optionnel)
-# echo "Installation de Prometheus et Grafana..."
-# docker network create monitoring
+# Prometheus
+docker run -d --name prometheus --network=monitoring -p 9090:9090 prom/prometheus
 
-# # Prometheus
-# docker run -d --name prometheus --network=monitoring -p 9090:9090 prom/prometheus
-
-# # Grafana
-# docker run -d --name grafana --network=monitoring -p 3000:3000 grafana/grafana
+# Grafana
+# default admin user credentials are admin/admin.
+docker run -d --name grafana --network=monitoring -p 3000:3000 grafana/grafana
 
 echo "Installation terminée !"
 
