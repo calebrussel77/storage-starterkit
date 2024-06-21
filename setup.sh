@@ -9,31 +9,39 @@ echo "Mise à jour des paquets..."
 sudo apt update && sudo apt upgrade -y
 
 # Installer les dépendances nécessaires
-echo "Installation des dépendances nécessaires..."
-sudo apt install apt-transport-https ca-certificates curl software-properties-common ufw -y
+echo "Désinstallation des paquets conflictuels..."
+for pkg in docker.io docker-doc docker-compose docker-compose-v2 podman-docker containerd runc; do sudo apt-get remove $pkg; done
 
-# Ajouter la clé GPG de Docker
-echo "Ajout de la clé GPG de Docker..."
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+# Ajouter la GPG Key officielle de Docker:
+echo "Ajouter la GPG Key officielle de Docker..."
+sudo apt-get update
+sudo apt-get install ca-certificates curl
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
 
-# Ajouter le dépôt Docker
-echo "Ajout du dépôt Docker..."
-sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+# Ajouter le repertoire à APT source:
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+sudo apt-get update
 
 # Installer Docker
 echo "Installation de Docker..."
-sudo apt update
-sudo apt install docker-ce docker-compose -y
+sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
-# Démarrer et activer Docker
-echo "Démarrage et activation de Docker..."
-sudo systemctl start docker
-sudo systemctl enable docker
+# Verifier l'installation
+echo "Vérification de l'installation de Docker..."
+sudo docker run --rm hello-world
 
-# Ajouter l'utilisateur au groupe Docker
-echo "Ajout de l'utilisateur au groupe Docker..."
-sudo usermod -aG docker ${USER}
-newgrp docker
+# Installer Docker Compose Plugin
+echo "Installation de Docker Compose..."
+sudo apt-get install docker-compose-plugin
+
+# Verifier l'installation
+echo "Vérification de l'installation de Docker Compose..."
+docker compose version
 
 # Configuration du pare-feu
 echo "Configuration du pare-feu..."
@@ -85,4 +93,4 @@ echo "Installation terminée !"
 
 # Start Docker
 echo "Lancement des services Docker..."
-docker-compose up -d
+docker compose up -d
