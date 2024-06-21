@@ -15,7 +15,7 @@ Start by cloning this repository on your Ubuntu server:
 
 ```bash
 git clone https://github.com/calebrussel77/storage-starterkit.git
-cd your-repo
+cd storage-starterkit
 ```
 
 ### 2. Create and Modify the .env File
