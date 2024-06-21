@@ -1,75 +1,45 @@
-name: "wordpress-starterkit"
+name: "storage-starterkit"
+
 services:
-  # Database - Mysql
+  # Postgres DB
   db:
-    image: mysql:8.0.27
-    cap_add: [SYS_NICE]
+    image: postgres:alpine
     container_name: db
-    volumes:
-      - ./mysql:/var/lib/mysql
-    restart: always
-    command: "--default-authentication-plugin=mysql_native_password"
     env_file:
       - ./conf/db.env
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "1M"
-        max-file: "10"
-    expose:
-      - 3306
-      - 33060
-  # phpmyadmin
-  phpmyadmin:
-    image: phpmyadmin/phpmyadmin
-    container_name: phpmyadmin
-    restart: always
     ports:
-      - "8080:80"
-    env_file:
-      - ./conf/phpmyadmin.env
-    depends_on:
-      - db
-  # Wordpress
-  wordpress:
-    container_name: wordpress
-    build:
-      context: .
-      dockerfile: "./dockerfiles/wordpress.dockerfile"
-    restart: always
-    user: "root:root"
-    depends_on:
-      - db
+      - "5432:5432"
     volumes:
-      - "./wordpress/:/var/www/html"
-      - ./php.ini:/usr/local/etc/php/conf.d/custom.ini
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - storage-starterkit-network
+
+  # Redis
+  redis:
+    image: redis:alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - storage-starterkit-network
+
+  # PGAdmin
+  pgadmin:
+    image: dpage/pgadmin4:8.8
+    container_name: pgadmin
     env_file:
-      - ./conf/wordpress.env
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "1M"
-        max-file: "10"
-  # Caddy server
-  caddy:
-    image: caddy:2.7-alpine
-    container_name: caddy-server
-    restart: always
-    volumes:
-      - ./wordpress:/var/www/html
-      - ./.caddy_data:/data
-      - ./.caddy_config:/config
-      - ./caddy/etc/Caddyfile:/etc/caddy/Caddyfile
-      - ./caddy/etc/tls_auto:/etc/tls_auto
-      - ./caddy/etc/tls_selfsigned:/etc/tls_selfsigned
+      - ./conf/pgadmin.env
     ports:
       - "80:80"
-      - "443:443"
-      - "443:443/udp"
-    env_file:
-      - ./conf/caddy.env
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "1M"
-        max-file: "10"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    networks:
+      - storage-starterkit-network
+
+networks:
+  storage-starterkit-network:
+    driver: bridge
+
+volumes:
+  pgdata:
+  pgadmin_data:
